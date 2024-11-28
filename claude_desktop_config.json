@@ -1,0 +1,56 @@
+{
+    "mcpServers": {
+      
+      "filesystem": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-filesystem",
+          "/Users/azhar/Desktop",
+          "/Users/azhar/Desktop/others/claudeMCP",
+          "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/ComputerUse",
+          "/Users/azhar/Desktop/others/slidesapp/slides-react-app/public/data/S5_S8",
+          "/Users/azhar/Desktop/others/slidesapp/slides-react-app"
+        ]
+      },
+      "github": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-github"
+        ],
+        "env": {
+          "GITHUB_PERSONAL_ACCESS_TOKEN": "your github GITHUB_PERSONAL_ACCESS_TOKEN",
+          "GITHUB_USERNAME": "syedazharmbnr1"
+        }
+      },
+     
+      "screen": {
+    "command": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/.env/bin/python",
+    "args": [
+      "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/mcp_screen_server.py"
+    ]
+    },
+    
+    "integration": {
+    "command": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/.env/bin/python",
+    "args": [
+      "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/ComputerUse/full_mcp_integration.py"
+    ]
+    },
+    "fastapiserver": {
+      "command": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/.env/bin/python",
+      "args": [
+        "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/fastapi/main.py"
+      ],
+      "cwd": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/fastapi",
+      "env": {
+        "PYTHONPATH": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py",
+        "PORT": "8000"
+      }
+    }
+  
+    
+    },
+    "globalShortcut": "Shift+Cmd+Space"
+  }

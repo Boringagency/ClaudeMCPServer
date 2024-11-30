@@ -2,6 +2,25 @@
 
 This repository contains a collection of Model Context Protocol (MCP) servers designed to enhance Claude's desktop application capabilities. Each server provides specific functionality that allows Claude to interact with your computer in different ways.
 
+## Latest Addition: DuckDB Integration! 🚀
+
+New DuckDB FastAPI server for efficient large-scale data analysis:
+
+### Example Queries and Results
+
+#### Query 1: Network Coverage Analysis
+![DuckDB Query Example 1](./fastapi/duckdb/assets/duckdb_query1.png)
+
+#### Query 2: Aggregated Results
+![DuckDB Query Example 2](./fastapi/duckdb/assets/duckdb_query2.png)
+
+### DuckDB Server Features
+- Analyze multiple CSV files (>1GB) directly in Claude Desktop
+- Lightning-fast SQL queries with DuckDB
+- Memory-efficient data processing
+- Connection pooling and caching
+- Automatic cleanup of unused connections
+
 ## Overview
 
 The project consists of several MCP servers:
@@ -9,6 +28,7 @@ The project consists of several MCP servers:
 2. Computer Control Server - Enables keyboard and mouse automation
 3. FastAPI Integration Server - Handles data processing and API endpoints
 4. Curl Server - Provides HTTP request capabilities
+5. DuckDB Server - Enables large-scale data analysis
 
 ## Prerequisites
 
@@ -38,7 +58,24 @@ pip install -r requirements.txt
 
 ## Server Components
 
-### 1. Screen Capture Server
+### 1. DuckDB Server
+
+Enables Claude to analyze large CSV files efficiently.
+
+#### Setup and Usage:
+```bash
+cd fastapi/duckdb
+python main.py
+```
+
+#### Features:
+- Process multiple CSV files simultaneously
+- Handle files larger than 1GB
+- Fast SQL querying with DuckDB
+- Memory-efficient processing
+- Connection pooling
+
+### 2. Screen Capture Server
 
 Enables Claude to capture and process screenshots of your screen.
 
@@ -53,13 +90,7 @@ python mcp_screen_server.py
 - WebP format support for optimal file size
 - Customizable save locations
 
-#### Testing:
-```bash
-python test_screen_server.py  # Run server tests
-python test_capture.py        # Test basic capture functionality
-```
-
-### 2. Computer Control Server
+### 3. Computer Control Server
 
 Allows Claude to control mouse and keyboard actions.
 
@@ -74,13 +105,7 @@ python ComputerUse/mcp_computer_server.py
 - Screen position tracking
 - Clipboard operations
 
-#### Testing:
-```bash
-python ComputerUse/test_computer_control.py  # Test computer control features
-python ComputerUse/test_client.py           # Test client connectivity
-```
-
-### 3. FastAPI Integration Server
+### 4. FastAPI Integration Server
 
 The FastAPI server provides a robust API interface for data processing and integration.
 
@@ -102,20 +127,7 @@ export PORT=8000
 python main.py
 ```
 
-#### API Endpoints:
-- `/process` - Main data processing endpoint
-  - Accepts POST requests with JSON data
-  - Processes CSV files and returns analysis results
-
-#### Testing FastAPI Server:
-```bash
-# Test the server directly
-curl -X POST http://localhost:8000/process \
-  -H "Content-Type: application/json" \
-  -d '{"date_column":"Start Time","model_column":"Device Brand","csv_file_paths":"file1.csv,file2.csv"}'
-```
-
-### 4. Curl Server
+### 5. Curl Server
 
 Provides HTTP request capabilities to Claude.
 
@@ -144,35 +156,19 @@ cd Curl_Server
         "<your-paths-here>"
       ]
     },
-    // ... other server configurations
+    "duckdb": {
+      "command": "/path/to/python",
+      "args": [
+        "/path/to/fastapi/duckdb/main.py"
+      ],
+      "cwd": "/path/to/fastapi/duckdb",
+      "env": {
+        "PYTHONPATH": "/path/to/mcp-server-py",
+        "PORT": "8010"
+      }
+    }
   }
 }
-```
-
-3. Configure GitHub integration (optional):
-- Add your GitHub personal access token
-- Update the GitHub username
-
-### Starting All Services
-
-1. Start the Screen Capture Server:
-```bash
-python mcp_screen_server.py
-```
-
-2. Start the Computer Control Server:
-```bash
-python ComputerUse/mcp_computer_server.py
-```
-
-3. Start the FastAPI Server:
-```bash
-python fastapi/main.py
-```
-
-4. Start the Integration Server:
-```bash
-python ComputerUse/full_mcp_integration.py
 ```
 
 ## Testing
@@ -208,6 +204,7 @@ chmod +x Curl_Server/*.sh
 3. Port Conflicts:
 - Screen Server: Default port 8767
 - FastAPI Server: Default port 8000
+- DuckDB Server: Default port 8010
 - Integration Server: Default port 8768
 
 ### Logging

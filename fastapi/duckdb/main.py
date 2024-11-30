@@ -8,7 +8,7 @@ import time
 import asyncio
 from datetime import datetime
 from collections.abc import Sequence
-from typing import Any, Optional
+from typing import Any, Optional, List
 from fastapi import FastAPI, HTTPException
 import uvicorn
 from pydantic import BaseModel
@@ -37,6 +37,7 @@ class MCPFastAPIServer:
         self.app = Server("fastapi-mcp-server")
         self.fastapi_app = FastAPI()
         
+        # Add CORS middleware
         self.fastapi_app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
@@ -45,40 +46,58 @@ class MCPFastAPIServer:
             allow_headers=["*"],
         )
         
+        # Configure logging
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger("fastapi-mcp-server")
         
+        # Set up handlers
         self.setup_handlers()
         self.setup_fastapi_routes()
         
+        # Start cleanup thread
         self.cleanup_thread = threading.Thread(target=self.cleanup_duckdb_connections, daemon=True)
         self.cleanup_thread.start()
 
     def is_valid_csv_path(self, csv_file_path: str) -> bool:
+        """Validate if the CSV path is safe to use"""
         csv_file_path = os.path.abspath(csv_file_path)
         return csv_file_path.endswith('.csv') and os.path.exists(csv_file_path)
 
-    def get_cache_key(self, csv_path: str) -> str:
-        mod_time = os.path.getmtime(csv_path)
-        return f"{csv_path}:{mod_time}"
+    def get_cache_key(self, csv_paths: List[str]) -> str:
+        """Generate cache key based on file paths and modification times"""
+        mod_times = [os.path.getmtime(path) for path in csv_paths]
+        return f"{','.join(csv_paths)}:{','.join(map(str, mod_times))}"
 
-    def load_csv_into_duckdb(self, csv_file_path: str) -> duckdb.DuckDBPyConnection:
-        if not self.is_valid_csv_path(csv_file_path):
-            raise ValueError(f"Invalid or non-existent CSV file path: {csv_file_path}")
+    def load_csv_into_duckdb(self, csv_file_paths: List[str]) -> duckdb.DuckDBPyConnection:
+        """Load multiple CSVs into DuckDB with caching"""
+        # Validate all paths
+        for path in csv_file_paths:
+            if not self.is_valid_csv_path(path):
+                raise ValueError(f"Invalid or non-existent CSV file path: {path}")
 
-        cache_key = self.get_cache_key(csv_file_path)
+        cache_key = self.get_cache_key(csv_file_paths)
 
         if cache_key in duckdb_cache:
             cache_access_times[cache_key] = time.time()
             return duckdb_cache[cache_key]
         else:
             conn = duckdb.connect(database=':memory:')
-            conn.execute(f"CREATE TABLE data AS SELECT * FROM read_csv_auto('{csv_file_path}');")
+            
+            # Configure DuckDB for large files
+            conn.execute("SET memory_limit='80%'")
+            conn.execute("SET threads TO 4")
+            
+            # Load each CSV file into a separate table
+            for i, file_path in enumerate(csv_file_paths):
+                table_name = f"data_{i}"
+                conn.execute(f"CREATE TABLE {table_name} AS SELECT * FROM read_csv_auto('{file_path}', sample_size=-1);")
+            
             duckdb_cache[cache_key] = conn
             cache_access_times[cache_key] = time.time()
             return conn
 
     def cleanup_duckdb_connections(self):
+        """Cleanup unused DuckDB connections periodically"""
         while True:
             time.sleep(3000)  # Check every 5 minutes
             current_time = time.time()
@@ -97,8 +116,10 @@ class MCPFastAPIServer:
         @self.fastapi_app.post("/execute_query")
         async def execute_query(request: QueryRequest):
             try:
+                # Handle multiple CSV files
+                csv_paths = [path.strip() for path in request.csv_file_path.split(',')]
                 result = await self.execute_query_internal(
-                    csv_file_path=request.csv_file_path,
+                    csv_file_paths=csv_paths,
                     query=request.query
                 )
                 return result
@@ -110,12 +131,18 @@ class MCPFastAPIServer:
         async def health_check():
             return {"status": "healthy", "server": "fastapi-mcp-server"}
 
-    async def execute_query_internal(self, csv_file_path: str, query: str):
+    async def execute_query_internal(self, csv_file_paths: List[str], query: str):
+        """Execute DuckDB query on CSV data"""
         try:
-            conn = self.load_csv_into_duckdb(csv_file_path)
-            result = conn.execute(query).fetchall()
-            columns = [desc[0] for desc in conn.description]
-            processed_data = [dict(zip(columns, row)) for row in result]
+            # Load CSVs into DuckDB
+            conn = self.load_csv_into_duckdb(csv_file_paths)
+
+            # Execute the query with pagination
+            result = conn.execute(query).fetchdf()
+            
+            # Convert DataFrame to dict for JSON serialization
+            processed_data = result.to_dict('records')
+            columns = list(result.columns)
 
             return {
                 "success": True,
@@ -139,13 +166,13 @@ class MCPFastAPIServer:
             return [
                 Tool(
                     name="execute_query",
-                    description="Execute DuckDB query on CSV file",
+                    description="Execute DuckDB query on one or more CSV files",
                     inputSchema={
                         "type": "object",
                         "properties": {
                             "csv_file_path": {
                                 "type": "string",
-                                "description": "Path to the CSV file"
+                                "description": "Comma-separated paths to CSV files"
                             },
                             "query": {
                                 "type": "string",
@@ -163,8 +190,9 @@ class MCPFastAPIServer:
                 raise ValueError(f"Unknown tool: {name}")
 
             try:
+                csv_paths = [path.strip() for path in arguments.get("csv_file_path").split(',')]
                 result = await self.execute_query_internal(
-                    csv_file_path=arguments.get("csv_file_path"),
+                    csv_file_paths=csv_paths,
                     query=arguments.get("query")
                 )
                 
@@ -188,6 +216,7 @@ class MCPFastAPIServer:
                 ]
 
     async def run_fastapi(self):
+        """Run the FastAPI server"""
         config = uvicorn.Config(
             self.fastapi_app, 
             host="0.0.0.0", 
@@ -199,6 +228,7 @@ class MCPFastAPIServer:
         await server.serve()
 
     async def run_mcp(self):
+        """Run the MCP server"""
         from mcp.server.stdio import stdio_server
         self.logger.info("Starting MCP Server")
         async with stdio_server() as (read_stream, write_stream):
@@ -209,6 +239,7 @@ class MCPFastAPIServer:
             )
 
     async def run(self):
+        """Main entry point for the server"""
         self.logger.info("Starting FastAPI MCP Server")
         try:
             await asyncio.gather(

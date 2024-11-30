@@ -1,21 +1,52 @@
 # DuckDB FastAPI MCP Server
 
-A FastAPI-based Model Context Protocol (MCP) server that provides DuckDB integration for efficient CSV file querying.
+A FastAPI-based Model Context Protocol (MCP) server that provides DuckDB integration for efficient CSV file querying and analysis, capable of handling large datasets (>1GB) directly through Claude Desktop.
+
+![DuckDB Query Example](./assets/duckdb_query_example.png)
 
 ## Features
 
 - FastAPI integration with MCP server
-- DuckDB in-memory database for fast CSV querying
+- DuckDB in-memory database for fast CSV querying of large files (>1GB)
+- Efficient analysis of multiple CSV files simultaneously
 - Connection pooling and caching
 - Automatic cleanup of unused connections
 - CORS support
 - Health check endpoint
 - Error handling and logging
 
+## Query Examples
+
+```sql
+-- Example of analyzing multiple large CSV files
+WITH coverage_summary AS (
+  SELECT
+    ROUND(Latitude, 2) as lat_round,
+    ROUND(Longitude, 2) as lon_round,
+    AVG("RSRP(ALL MRs) (dBm)") as avg_rsrp,
+    SUM("UMR Count") as total_mr_count
+  FROM data
+  GROUP BY lat_round, lon_round
+)
+SELECT *
+FROM coverage_summary
+WHERE avg_rsrp < -90
+ORDER BY total_mr_count DESC
+LIMIT 10;
+```
+
 ## Endpoints
 
 - `POST /execute_query`: Execute DuckDB SQL queries on CSV files
 - `GET /health`: Health check endpoint
+
+## Large File Handling
+
+DuckDB efficiently handles large CSV files by:
+- Using memory-mapped files for data access
+- Implementing parallel processing
+- Providing optimized SQL execution
+- Supporting streaming for large result sets
 
 ## Configuration
 
@@ -35,7 +66,7 @@ python main.py
 curl -X POST http://localhost:8010/execute_query \
   -H "Content-Type: application/json" \
   -d '{
-    "csv_file_path": "/path/to/your/file.csv",
+    "csv_file_path": "/path/to/your/large_file.csv",
     "query": "SELECT * FROM data LIMIT 5;"
   }'
 ```
@@ -47,6 +78,8 @@ curl -X POST http://localhost:8010/execute_query \
 - Automatic connection cleanup after 10 minutes of inactivity
 - Error handling and detailed logging
 - MCP tool integration for Claude AI
+- Support for large file analysis (>1GB)
+- Multi-file query capabilities
 
 ## Integration with Claude Desktop
 

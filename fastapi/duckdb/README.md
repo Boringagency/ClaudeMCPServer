@@ -2,7 +2,13 @@
 
 A FastAPI-based Model Context Protocol (MCP) server that provides DuckDB integration for efficient CSV file querying and analysis, capable of handling large datasets (>1GB) directly through Claude Desktop.
 
-![DuckDB Query Example](./assets/duckdb_query_example.png)
+## Example Queries and Results
+
+### Query 1: Network Coverage Analysis
+![DuckDB Query Example 1](./assets/duckdb_query1.png)
+
+### Query 2: Aggregated Results
+![DuckDB Query Example 2](./assets/duckdb_query2.png)
 
 ## Features
 

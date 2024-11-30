@@ -1,6 +1,5 @@
 {
     "mcpServers": {
-      
       "filesystem": {
         "command": "npx",
         "args": [
@@ -24,33 +23,47 @@
           "GITHUB_USERNAME": "syedazharmbnr1"
         }
       },
-     
       "screen": {
-    "command": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/.env/bin/python",
-    "args": [
-      "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/mcp_screen_server.py"
-    ]
-    },
-    
-    "integration": {
-    "command": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/.env/bin/python",
-    "args": [
-      "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/ComputerUse/full_mcp_integration.py"
-    ]
-    },
-    "fastapiserver": {
-      "command": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/.env/bin/python",
-      "args": [
-        "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/fastapi/main.py"
-      ],
-      "cwd": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/fastapi",
-      "env": {
-        "PYTHONPATH": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py",
-        "PORT": "8000"
+        "command": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/.env/bin/python",
+        "args": [
+          "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/mcp_screen_server.py"
+        ]
+      },
+      "curlserver": {
+        "command": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/.env/bin/python",
+        "args": [
+          "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/Curl_Server/curl_mcp_server.py"
+        ],
+        "cwd": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/Curl_Server"
+      },
+      "integration": {
+        "command": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/.env/bin/python",
+        "args": [
+          "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/ComputerUse/full_mcp_integration.py"
+        ]
+      },
+      "duckdb": {
+        "command": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/.env/bin/python",
+        "args": [
+          "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/fastapi/duckdb/main.py"
+        ],
+        "cwd": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/fastapi/duckdb",
+        "env": {
+          "PYTHONPATH": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py",
+          "PORT": "8010"
+        }
+      },
+      "fastapiserver": {
+        "command": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/.env/bin/python",
+        "args": [
+          "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/fastapi/main.py"
+        ],
+        "cwd": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py/fastapi",
+        "env": {
+          "PYTHONPATH": "/Users/azhar/Desktop/others/claudeMCP/mcp-server-py",
+          "PORT": "8001"
+        }
       }
-    }
-  
-    
     },
     "globalShortcut": "Shift+Cmd+Space"
-  }
+}

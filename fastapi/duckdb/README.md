@@ -47,3 +47,21 @@ curl -X POST http://localhost:8010/execute_query \
 - Automatic connection cleanup after 10 minutes of inactivity
 - Error handling and detailed logging
 - MCP tool integration for Claude AI
+
+## Integration with Claude Desktop
+
+Add the following configuration to your `claude_desktop_config.json`:
+
+```json
+"duckdb": {
+  "command": "/path/to/python",
+  "args": [
+    "/path/to/fastapi/duckdb/main.py"
+  ],
+  "cwd": "/path/to/fastapi/duckdb",
+  "env": {
+    "PYTHONPATH": "/path/to/mcp-server-py",
+    "PORT": "8010"
+  }
+}
+```

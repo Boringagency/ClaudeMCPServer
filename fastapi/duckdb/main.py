@@ -37,7 +37,6 @@ class MCPFastAPIServer:
         self.app = Server("fastapi-mcp-server")
         self.fastapi_app = FastAPI()
         
-        # Add CORS middleware
         self.fastapi_app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
@@ -46,30 +45,24 @@ class MCPFastAPIServer:
             allow_headers=["*"],
         )
         
-        # Configure logging
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger("fastapi-mcp-server")
         
-        # Set up handlers
         self.setup_handlers()
         self.setup_fastapi_routes()
         
-        # Start cleanup thread
         self.cleanup_thread = threading.Thread(target=self.cleanup_duckdb_connections, daemon=True)
         self.cleanup_thread.start()
 
     def is_valid_csv_path(self, csv_file_path: str) -> bool:
-        """Validate if the CSV path is safe to use"""
         csv_file_path = os.path.abspath(csv_file_path)
         return csv_file_path.endswith('.csv') and os.path.exists(csv_file_path)
 
     def get_cache_key(self, csv_path: str) -> str:
-        """Generate cache key based on file path and modification time"""
         mod_time = os.path.getmtime(csv_path)
         return f"{csv_path}:{mod_time}"
 
     def load_csv_into_duckdb(self, csv_file_path: str) -> duckdb.DuckDBPyConnection:
-        """Load CSV into DuckDB with caching"""
         if not self.is_valid_csv_path(csv_file_path):
             raise ValueError(f"Invalid or non-existent CSV file path: {csv_file_path}")
 
@@ -86,7 +79,6 @@ class MCPFastAPIServer:
             return conn
 
     def cleanup_duckdb_connections(self):
-        """Cleanup unused DuckDB connections periodically"""
         while True:
             time.sleep(3000)  # Check every 5 minutes
             current_time = time.time()
@@ -119,16 +111,10 @@ class MCPFastAPIServer:
             return {"status": "healthy", "server": "fastapi-mcp-server"}
 
     async def execute_query_internal(self, csv_file_path: str, query: str):
-        """Execute DuckDB query on CSV data"""
         try:
-            # Load CSV into DuckDB
             conn = self.load_csv_into_duckdb(csv_file_path)
-
-            # Execute the query
             result = conn.execute(query).fetchall()
             columns = [desc[0] for desc in conn.description]
-            
-            # Process results
             processed_data = [dict(zip(columns, row)) for row in result]
 
             return {
@@ -202,7 +188,6 @@ class MCPFastAPIServer:
                 ]
 
     async def run_fastapi(self):
-        """Run the FastAPI server"""
         config = uvicorn.Config(
             self.fastapi_app, 
             host="0.0.0.0", 
@@ -214,7 +199,6 @@ class MCPFastAPIServer:
         await server.serve()
 
     async def run_mcp(self):
-        """Run the MCP server"""
         from mcp.server.stdio import stdio_server
         self.logger.info("Starting MCP Server")
         async with stdio_server() as (read_stream, write_stream):
@@ -225,7 +209,6 @@ class MCPFastAPIServer:
             )
 
     async def run(self):
-        """Main entry point for the server"""
         self.logger.info("Starting FastAPI MCP Server")
         try:
             await asyncio.gather(

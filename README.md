@@ -8,7 +8,7 @@ New DuckDB FastAPI server for efficient large-scale data analysis:
 
 ### Example Queries and Results
 
-#### Query 1: Network Coverage Analysis
+#### Query 1: Analysis
 ![DuckDB Query Example 1](./fastapi/duckdb/assets/duckdb_query1.png)
 
 #### Query 2: Aggregated Results
